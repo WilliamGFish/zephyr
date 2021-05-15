@@ -569,9 +569,9 @@ static void send_reliable(void)
 			break;
 		}
 
-		if (BT_MESH_ADV(buf)->busy) {
-			continue;
-		}
+		// if (BT_MESH_ADV(buf)->busy) {
+		// 	continue;
+		// }
 
 		BT_DBG("%u bytes: %s", buf->len, bt_hex(buf->data, buf->len));
 
@@ -586,6 +586,7 @@ static void send_reliable(void)
 static void prov_retransmit(struct k_work *work)
 {
 	int32_t timeout_ms;
+	int i;
 
 	BT_DBG("");
 
@@ -616,7 +617,25 @@ static void prov_retransmit(struct k_work *work)
 		return;
 	}
 
-	send_reliable();
+	for (i = 0; i < ARRAY_SIZE(link.tx.buf); i++) {
+		struct net_buf *buf = link.tx.buf[i];
+
+		if (!buf) {
+			break;
+		}
+
+		if (BT_MESH_ADV(buf)->busy) {
+			continue;
+		}
+
+		BT_DBG("%u bytes: %s", buf->len, bt_hex(buf->data, buf->len));
+
+		if (i + 1 < ARRAY_SIZE(link.tx.buf) && link.tx.buf[i + 1]) {
+			bt_mesh_adv_send(buf, NULL, NULL);
+		} else {
+			bt_mesh_adv_send(buf, &buf_sent_cb, NULL);
+		}
+	}
 }
 
 static int bearer_ctl_send(uint8_t op, const void *data, uint8_t data_len,

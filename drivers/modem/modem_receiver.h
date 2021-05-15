@@ -21,6 +21,27 @@
 extern "C" {
 #endif
 
+// /* Localisation Data */
+// struct mdm_cell_locate {
+// 	char *date;
+// 	char *time;
+// 	char *lat;
+// 	char *lon;
+// 	int alt;
+// 	int uncertainty;
+// 	int speed;
+// 	int direction;
+// 	int vertical_acc;
+// 	int sensor_used;
+// 	int sv_used;
+// 	int antenna_status;
+// 	int jamming_status;
+// 	int count;
+// 	bool ok;
+// 	int size;
+// };
+
+
 struct mdm_receiver_context {
 	const struct device *uart_dev;
 
@@ -38,6 +59,9 @@ struct mdm_receiver_context {
 #endif
 	char *data_iccid;
 	int   data_rssi;
+	
+	// /* UBLOX Cell Localization Data */
+	// struct mdm_cell_locate data_localization;	
 };
 
 /**

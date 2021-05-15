@@ -61,8 +61,10 @@ static int reset_state(void)
 
 static void prov_link_close(enum prov_bearer_link_status status)
 {
-	BT_DBG("%u", status);
+	BT_WARN("%u", status);
 	bt_mesh_prov_link.expect = PROV_NO_PDU;
+
+	atomic_clear_bit(bt_mesh_prov_link.flags, LINK_ACTIVE);
 
 	bt_mesh_prov_link.bearer->link_close(status);
 }
@@ -546,7 +548,7 @@ static void prov_complete(const uint8_t *data)
 {
 	struct bt_mesh_cdb_node *node = prov_device.node;
 
-	BT_DBG("key %s, net_idx %u, num_elem %u, addr 0x%04x",
+	BT_WARN("key %s, net_idx %u, num_elem %u, addr 0x%04x",
 	       bt_hex(node->dev_key, 16), node->net_idx, node->num_elem,
 	       node->addr);
 
@@ -736,6 +738,7 @@ int bt_mesh_pb_adv_open(const uint8_t uuid[16], uint16_t net_idx, uint16_t addr,
 {
 	int err;
 
+BT_WARN("bt_mesh_pb_adv_open (0x%04x) ", addr);
 	if (atomic_test_and_set_bit(bt_mesh_prov_link.flags, LINK_ACTIVE)) {
 		return -EBUSY;
 	}
@@ -743,7 +746,7 @@ int bt_mesh_pb_adv_open(const uint8_t uuid[16], uint16_t net_idx, uint16_t addr,
 	struct bt_uuid_128 uuid_repr = { .uuid = { BT_UUID_TYPE_128 } };
 
 	memcpy(uuid_repr.val, uuid, 16);
-	BT_DBG("Provisioning %s", bt_uuid_str(&uuid_repr.uuid));
+	BT_DBG("Provisioning (bt_mesh_pb_adv_open) %s", bt_uuid_str(&uuid_repr.uuid));
 
 	atomic_set_bit(bt_mesh_prov_link.flags, PROVISIONER);
 	memcpy(prov_device.uuid, uuid, 16);

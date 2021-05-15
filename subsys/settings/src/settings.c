@@ -247,7 +247,7 @@ int settings_commit_subtree(const char *subtree)
 		}
 		if (ch->h_commit) {
 			rc2 = ch->h_commit();
-			if (!rc) {
+			if (!rc2) {
 				rc = rc2;
 			}
 		}
@@ -261,7 +261,7 @@ int settings_commit_subtree(const char *subtree)
 		}
 		if (ch->h_commit) {
 			rc2 = ch->h_commit();
-			if (!rc) {
+			if (!rc2) {
 				rc = rc2;
 			}
 		}

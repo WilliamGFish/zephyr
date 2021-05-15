@@ -23,6 +23,8 @@ struct bt_mesh_rpl {
 typedef void (*bt_mesh_rpl_func_t)(struct bt_mesh_rpl *rpl,
 					void *user_data);
 
+int bt_mesh_rpl_addr_clear(uint16_t src);
+
 void bt_mesh_rpl_reset(void);
 bool bt_mesh_rpl_check(struct bt_mesh_net_rx *rx,
 			struct bt_mesh_rpl **match);

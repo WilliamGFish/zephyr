@@ -25,6 +25,7 @@
 
 	/* These aliases are provided for compatibility with samples */
 	aliases {
+		adc-0 = &adc;
 		led0 = &led0;
 		sw0 = &button0;
 	};

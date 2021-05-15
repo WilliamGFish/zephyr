@@ -31,6 +31,7 @@
 
 	/* These aliases are provided for compatibility with samples */
 	aliases {
+		adc-0 = &adc;
 		led0 = &led0;
 		spi = &spi2;
 	};
@@ -41,6 +42,12 @@
 		compatible = "fixed-partitions";
 		#address-cells = <1>;
 		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "sam-ba";
+			reg = <0x0 0x10000>;
+			read-only;
+		};
 
 		code_partition: partition@10000 {
 			label = "code";
@@ -77,6 +84,26 @@
 	status = "okay";
 	sda-pin = <14>; //P0.14
 	scl-pin = <15>; //P0.15
+
+	
+	// hts221@5f {
+	// 	compatible = "st,hts221";
+	// 	reg = <0x5f>;
+	// 	label = "HTS221";
+	// };
+
+	lps22hb_press: lps22hb_press@5c {
+		compatible = "st,lps22hb-press";
+		reg = <0x5c>;
+		label = "LPS22HB";
+	};
+
+	hts221: hts221@5f {
+		compatible = "st,hts221";
+		reg = <0x5f>;
+		label = "HTS221";
+		drdy-gpios = <&gpio0 24 GPIO_ACTIVE_HIGH>;
+	};
 };
 // we use SPI2 because SPI1/0 shares conflicts with I2C1/0
 &spi2 {

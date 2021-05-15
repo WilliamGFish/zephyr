@@ -1,0 +1,98 @@
+# Private config options for Modem & MQTT
+
+# Copyright (c) 2019 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Networking MQTT application"
+
+choice
+     prompt "Cloud Platform"
+     optional
+
+config CLOUD_AZURE_PLATFORM
+    bool "Azure IoT Platform"
+
+config CLOUD_GOOGLE_PLATFORM
+    bool "Google IoT Platform"
+
+endchoice	  
+
+
+config WIFI_SSID
+	string "SSID Name"
+	help
+	  Name of WiFi Acces Point SSID.
+
+config WIFI_PASSWORD
+	string "Cloud password"
+	help
+	  Password of your WiFi account.
+
+mainmenu "Networking MQTT application"
+
+config CLOUD_USERNAME
+	string "Cloud username"
+	help
+	  Username of your Azure account.
+
+config CLOUD_PASSWORD
+	string "Cloud password"
+	help
+	  Password of your Azure account.
+
+config CLOUD_CLIENT_ID
+	string "Cloud IoT hub MQTT client ID"
+	help
+	  Device ID which you have setup in IoT hub account.
+
+config CLOUD_HOSTNAME
+	string "Cloud IoT hub hostname"
+	help
+	  Hostname of your Cloud IoT hub.
+
+config CLOUD_SERVER_ADDR
+	string "Cloud server address"
+	help
+	  Cloud server address.
+
+config CLOUD_SERVER_PORT
+	int "Cloud server port number"
+	default 8883
+	help
+	  Cloud server port number.
+
+config PROXY_SOCKS_ADDR
+	string "Proxy address"
+	depends on SOCKS
+	help
+	  Provide proxy address if you are running this application
+	  behind proxy.
+
+config PROXY_SOCKS_PORT
+	int "Proxy port"
+	depends on SOCKS
+	help
+	  Provide proxy port if you are running this application
+	  behind proxy.
+
+mainmenu "Google IOT MQTT/TLS sample application"
+
+config CLOUD_AUDIENCE
+	string "Audience string"
+	default "put audience string here"
+	help
+	  Set required audience string that matches Google Cloud project
+
+config CLOUD_SUBSCRIBE_CONFIG
+	string "Subscription string for config"
+	default "put subscription string here"
+	help
+	  Set required subscription string that matches Google Cloud project
+	  config item.
+
+config CLOUD_PUBLISH_TOPIC
+	string "Publish topic string"
+	default "put topic string here"
+	help
+	  Set publish topics string that matches Google Cloud project
+source "Kconfig.zephyr"

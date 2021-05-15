@@ -822,6 +822,22 @@ struct bt_mesh_cdb_node *bt_mesh_cdb_node_alloc(const uint8_t uuid[16], uint16_t
 	int i;
 
 	if (addr == BT_MESH_ADDR_UNASSIGNED) {
+		if (IS_ENABLED(CONFIG_BT_MESH_CDB_ADDR_REISSUE)) {
+			for (i = 0; i < ARRAY_SIZE(bt_mesh_cdb.nodes); i++) {
+				struct bt_mesh_cdb_node *node = &bt_mesh_cdb.nodes[i];
+
+				if (!memcmp(node->uuid, uuid, 16) && node->addr > 0x0) {
+					BT_DBG("CDB found duplicate node uuid %s",
+						bt_hex(node->uuid, 16));
+					/* Clear replay buffers to allow provisioning */	
+					bt_mesh_rpl_addr_clear(node->addr);
+
+					atomic_set(node->flags, 0);
+					return node;
+				}
+			}
+		}
+
 		addr = find_lowest_free_addr(num_elem);
 		if (addr == BT_MESH_ADDR_UNASSIGNED) {
 			return NULL;

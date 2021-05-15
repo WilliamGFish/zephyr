@@ -89,6 +89,13 @@ config BT_MESH_CDB_APP_KEY_COUNT
 	  This option specifies how many application keys that can at most
 	  be saved in the configuration database.
 
+config BT_MESH_CDB_ADDR_REISSUE
+	bool "Re-issue node addresses from CDB"
+	default N
+	help
+	  This option will re-issues previously assigned address when a UUID that currently exists in the CDB is presented. 
+	  The replay protection will cause significant delays compared with intial provisioning and subsequnt re-configuration.
+
 endif # BT_MESH_CDB
 
 if BT_CONN

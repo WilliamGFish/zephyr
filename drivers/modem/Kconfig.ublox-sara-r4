@@ -55,7 +55,8 @@ config MODEM_UBLOX_SARA_R4_RX_WORKQ_STACK_SIZE
 
 config MODEM_UBLOX_SARA_R4_APN
 	string "APN for establishing network connection"
-	default "hologram"
+	# default "hologram"
+	default "goto.virginmobile.uk"	
 	help
 	  This setting is used in the AT+CGDCONT command to set the APN name
 	  for the network connection context.  This value is specific to

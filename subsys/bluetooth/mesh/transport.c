@@ -1334,7 +1334,7 @@ static int trans_seg(struct net_buf_simple *buf, struct bt_mesh_net_rx *net_rx,
 	if (rx) {
 		/* Discard old SeqAuth packet */
 		if (rx->seq_auth > *seq_auth) {
-			BT_WARN("Ignoring old SeqAuth");
+			BT_WARN("Discarding old SeqAuth");
 			return -EINVAL;
 		}
 

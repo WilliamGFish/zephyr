@@ -13,6 +13,28 @@
 	model = "Particle Argon";
 	compatible = "particle,argon", "particle,feather";
 
+	aliases {
+
+
+	
+		// i2c-0 = &i2c0;
+		// i2c-1 = &i2c1;
+		// spi-0 = &spi0;
+		// spi-1 = &spi1;
+		// uart-0 = &uart0;
+		uart-1 = &uart1;
+		adc-0 = &adc;
+		gpio-0 = &gpio0;
+		// gpiote-0 = &gpiote;
+		// wdt-0 = &wdt;
+		// qdec-0 = &qdec;
+		// rtc-0 = &rtc0;
+		// rtc-1 = &rtc1;
+		// timer-0 = &timer0;
+		// timer-1 = &timer1;
+		// timer-2 = &timer2;
+	};
+
 	sky13351 {
 		compatible = "skyworks,sky13351";
 		vctl1-gpios = <&gpio0 25 GPIO_ACTIVE_LOW>;
@@ -25,14 +47,37 @@
 		output-ohms = <2100000>;
 		full-ohms = <(2100000 + 806000)>;
 	};
+
+	/* this is the creation of a voltge divider for external sensors 
+	* see PR #21606 */
+	extsensor {
+		compatible = "voltage-divider";
+		io-channels = <&adc 3>;
+		output-ohms = <2100000>;
+		full-ohms = <(2100000 + 806000)>;
+	};	
 };
 
 &uart1 { /* ESP32 */
 	compatible = "nordic,nrf-uarte";
-	current-speed = <921600>;
+	// current-speed = <921600>;
+	current-speed = <115200>;
 	status = "okay";
 	tx-pin = <37>;
 	rx-pin = <36>;
 	rts-pin = <39>;
 	cts-pin = <38>;
+
+
+	esp {
+		// compatible = "espressif,esp";
+		compatible = "espressif,esp-at";
+		status = "okay";
+		label = "espressif-esp";
+		target-speed=<115200>;
+
+		reset-gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+		// wifi-reset-gpios = <&gpio0 24 0>;
+		// wifi-uart-speed = <115200>;
+	};	
 };

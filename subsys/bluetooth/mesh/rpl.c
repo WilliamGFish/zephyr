@@ -45,6 +45,27 @@ static inline int rpl_idx(const struct bt_mesh_rpl *rpl)
 	return rpl - &replay_list[0];
 }
 
+static void clear_rpl(struct bt_mesh_rpl *rpl)
+{
+	int err;
+	char path[18];
+
+	if (!rpl->src) {
+		return;
+	}
+
+	snprintk(path, sizeof(path), "bt/mesh/RPL/%x", rpl->src);
+	err = settings_delete(path);
+	if (err) {
+		BT_ERR("Failed to clear RPL");
+	} else {
+		BT_DBG("Cleared RPL");
+	}
+
+	(void)memset(rpl, 0, sizeof(*rpl));
+	atomic_clear_bit(store, rpl_idx(rpl));
+}
+
 static void schedule_rpl_store(struct bt_mesh_rpl *entry)
 {
 	atomic_set_bit(store, rpl_idx(entry));
@@ -184,13 +205,18 @@ void bt_mesh_rpl_reset(void)
 
 		if (rpl->src) {
 			if (rpl->old_iv) {
-				(void)memset(rpl, 0, sizeof(*rpl));
+				// (void)memset(rpl, 0, sizeof(*rpl));
+				if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+					clear_rpl(rpl);
+				} else {
+					(void)memset(rpl, 0, sizeof(*rpl));
+				}				
 			} else {
 				rpl->old_iv = true;
 			}
 
 			if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
-				schedule_rpl_store(rpl);
+				schedule_rpl_store(rpl);			
 			}
 		}
 	}
@@ -254,6 +280,10 @@ static void store_rpl(struct bt_mesh_rpl *entry)
 	char path[18];
 	int err;
 
+	if (!entry->src) {
+		return;
+	}
+
 	BT_DBG("src 0x%04x seq 0x%06x old_iv %u", entry->src, entry->seq,
 	       entry->old_iv);
 
@@ -270,26 +300,6 @@ static void store_rpl(struct bt_mesh_rpl *entry)
 	}
 }
 
-static void clear_rpl(struct bt_mesh_rpl *rpl)
-{
-	int err;
-	char path[18];
-
-	if (!rpl->src) {
-		return;
-	}
-
-	snprintk(path, sizeof(path), "bt/mesh/RPL/%x", rpl->src);
-	err = settings_delete(path);
-	if (err) {
-		BT_ERR("Failed to clear RPL");
-	} else {
-		BT_DBG("Cleared RPL");
-	}
-
-	(void)memset(rpl, 0, sizeof(*rpl));
-	atomic_clear_bit(store, rpl_idx(rpl));
-}
 
 static void store_pending_rpl(struct bt_mesh_rpl *rpl)
 {
@@ -311,4 +321,43 @@ void bt_mesh_rpl_pending_store(void)
 			clear_rpl(&replay_list[i]);
 		}
 	}
+}
+int bt_mesh_rpl_addr_clear(uint16_t src)
+{
+	int err = 0;
+	char path[18];
+
+	if (!src) {
+		LOG_DBG("ERROR: Invalid source Addr: 0x%04x", src);
+		return -ENOENT;
+	}
+	struct bt_mesh_rpl *rpl = bt_mesh_rpl_find(src);
+	
+	if (!rpl->src) {
+		return -ENOENT;
+	}
+
+	if (rpl->src == src) {
+
+		snprintk(path, sizeof(path), "bt/mesh/RPL/%x", rpl->src);
+		printk("CLEARING RPL FOR: Addr: 0x%04x : %s \n\n", rpl->src, path);
+		err = settings_delete(path);
+		if (err) {
+			BT_ERR("Failed to clear RPL");
+		} else {
+			BT_DBG("Cleared RPL");
+		}
+
+		(void)memset(rpl, 0, sizeof(*rpl));
+		atomic_clear_bit(store, rpl_idx(rpl));
+	
+		if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+			schedule_rpl_store(rpl);
+		}
+		return err;
+	}
+
+	LOG_DBG("Error: No Replay Buffers Found for Addr %d", src);
+	printk("ERROR: NOT FOUND!! source Addr: 0x%04x\n", src);
+	return -ENOENT;
 }

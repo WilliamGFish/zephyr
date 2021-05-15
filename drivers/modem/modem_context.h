@@ -56,6 +56,27 @@ struct modem_pin {
 	gpio_flags_t init_flags;
 };
 
+/* Localisation Data */
+struct mdm_cell_locate {
+	char *date;
+	char *time;
+	char *lat;
+	char *lon;
+	char *alt;
+	// int alt;
+	int uncertainty;
+	int speed;
+	int direction;
+	int vertical_acc;
+	int sensor_used;
+	int sv_used;
+	int antenna_status;
+	int jamming_status;
+	int count;
+	bool ok;
+	int size;
+};
+
 struct modem_context {
 	/* modem data */
 	char *data_manufacturer;
@@ -67,6 +88,9 @@ struct modem_context {
 	char *data_iccid;
 #endif
 	int   data_rssi;
+
+	/* UBLOX Cell Localization Data */
+	struct mdm_cell_locate data_localization;	
 
 	/* pin config */
 	struct modem_pin *pins;

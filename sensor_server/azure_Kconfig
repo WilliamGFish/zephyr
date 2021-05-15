@@ -1,0 +1,53 @@
+# Private config options for mqtt-azure sample app
+
+# Copyright (c) 2019 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Networking mqtt-azure sample application"
+
+config CLOUD_USERNAME
+	string "Cloud username"
+	help
+	  Username of your Azure account.
+
+config CLOUD_PASSWORD
+	string "Cloud password"
+	help
+	  Password of your Azure account.
+
+config CLOUD_CLIENT_ID
+	string "Cloud IoT hub MQTT client ID"
+	help
+	  Device ID which you have setup in IoT hub account.
+
+config CLOUD_HOSTNAME
+	string "Cloud IoT hub hostname"
+	help
+	  Hostname of your Cloud IoT hub.
+
+config CLOUD_SERVER_ADDR
+	string "Cloud server address"
+	help
+	  Cloud server address.
+
+config CLOUD_SERVER_PORT
+	int "Cloud server port number"
+	default 8883
+	help
+	  Cloud server port number.
+
+config PROXY_SOCKS_ADDR
+	string "Proxy address"
+	depends on SOCKS
+	help
+	  Provide proxy address if you are running this application
+	  behind proxy.
+
+config PROXY_SOCKS_PORT
+	int "Proxy port"
+	depends on SOCKS
+	help
+	  Provide proxy port if you are running this application
+	  behind proxy.
+
+source "Kconfig.zephyr"
