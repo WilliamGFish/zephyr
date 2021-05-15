@@ -131,11 +131,6 @@ void test_bitarray_set_clear(void)
 	int bit_val;
 	size_t bit, bundle_idx, bit_idx_in_bundle;
 
-	/* Bitarrays have embedded spinlocks and can't on the stack. */
-	if (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
-		ztest_test_skip();
-	}
-
 	SYS_BITARRAY_DEFINE(ba, 234);
 
 	for (bit = 0U; bit < ba.num_bits; ++bit) {
@@ -470,11 +465,6 @@ void test_bitarray_alloc_free(void)
 {
 	int i;
 
-	/* Bitarrays have embedded spinlocks and can't on the stack. */
-	if (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
-		ztest_test_skip();
-	}
-
 	alloc_and_free_predefined();
 
 	i = 1;
@@ -490,11 +480,6 @@ void test_bitarray_alloc_free(void)
 void test_bitarray_region_set_clear(void)
 {
 	int ret;
-
-	/* Bitarrays have embedded spinlocks and can't on the stack. */
-	if (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
-		ztest_test_skip();
-	}
 
 	uint32_t ba_expected[4];
 

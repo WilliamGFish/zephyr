@@ -39,7 +39,7 @@ FUNC_NORETURN void z_x86_prep_c(void *arg)
 	x86_64_irq_init();
 #endif
 
-#if defined(CONFIG_MULTIBOOT_INFO) && !defined(CONFIG_BUILD_OUTPUT_EFI)
+#ifdef CONFIG_MULTIBOOT_INFO
 	z_multiboot_init(info);
 #else
 	ARG_UNUSED(info);
