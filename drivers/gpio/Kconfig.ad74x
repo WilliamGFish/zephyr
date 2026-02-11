@@ -1,0 +1,9 @@
+# Copyright (c) 2026 William Fish (Manulytica ltd)
+# SPDX-License-Identifier: Apache-2.0
+
+config GPIO_AD74X
+    bool "Analog Devices AD74x GPIO"
+    default y
+    depends on MFD_AD74X
+    help
+        GPIO child driver for AD74x.

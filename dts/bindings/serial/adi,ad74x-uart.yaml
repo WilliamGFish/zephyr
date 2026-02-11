@@ -1,0 +1,11 @@
+# Copyright (c) 2026 William Fish (Manulytica ltd)
+# SPDX-License-Identifier: Apache-2.0
+
+description: AD74x HART UART Child
+compatible: "adi,ad74x-uart"
+include: [uart-controller.yaml]
+properties:
+  reg:
+    type: int
+    required: true
+    description: Channel ID (0 for AD74115H, 0-3 for AD74416H)

@@ -1,0 +1,15 @@
+# Copyright (c) 2026 William Fish (Manulytica ltd)
+# SPDX-License-Identifier: Apache-2.0
+
+description: Analog Devices AD74x MFD Parent (AD74416H / AD74115H)
+compatible: "adi,ad74x-mfd"
+include: [spi-device.yaml]
+properties:
+  chip-type:
+    type: string
+    required: true
+    enum: ["ad74416h", "ad74115h"]
+  reset-gpios:
+    type: phandle-array
+  adc-rdy-gpios:
+    type: phandle-array
