@@ -23,6 +23,11 @@ struct ad74x_mfd_data {
 	uint8_t frame_size;
 };
 
+/**
+ * @brief CRC-8 calculation for AD74x series.
+ * Polynomial: x^8 + x^2 + x^1 + 1 (0x07).
+ * Reference: AD74416H Datasheet Page 72, SPI CRC section.
+ */
 static uint8_t ad74x_crc8(const uint8_t *p, size_t len)
 {
 	uint8_t crc = 0;
@@ -41,6 +46,10 @@ static void ad74x_adc_rdy_isr(const struct device *port, struct gpio_callback *c
 	k_sem_give(&data->adc_sync_sem);
 }
 
+/**
+ * @brief Central transfer engine for all child drivers.
+ * Handles the 2-stage SPI transaction required for reads.
+ */
 static int ad74x_mfd_transfer(const struct device *dev, uint8_t reg, uint16_t val_in,
 			      uint16_t *val_out, bool is_read)
 {
@@ -50,6 +59,10 @@ static int ad74x_mfd_transfer(const struct device *dev, uint8_t reg, uint16_t va
 	uint8_t read_cmd = (config->type == CHIP_AD74416H) ? 0x6E : 0x64;
 	int ret;
 
+	/* Stage 1: Write data or Send Read-Request.
+	 * AD74416H (40-bit) uses a leading zero byte.
+	 * AD74115H (32-bit) starts immediately with the address.
+	 */    
 	k_mutex_lock(&data->bus_lock, K_FOREVER);
 	if (config->type == CHIP_AD74416H) {
 		tx[1] = is_read ? read_cmd : reg;
@@ -68,11 +81,23 @@ static int ad74x_mfd_transfer(const struct device *dev, uint8_t reg, uint16_t va
 				 rx_s = {.buffers = &rx_buf, .count = 1};
 
 	ret = spi_transceive_dt(&config->spi, &tx_s, &rx_s);
+
+	/* Stage 2: Data Extraction.
+	 * Per Datasheet P. 71 (74115H) / P. 70 (4416H), read data is clocked out 
+	 * in the transaction following the read request. We send a NOP (0x00) here.
+	 */
 	if (ret == 0 && is_read && val_out) {
 		memset(tx, 0, 5);
-		tx[data->frame_size - 1] = ad74x_crc8(tx, data->frame_size - 1);
-		spi_transceive_dt(&config->spi, &tx_s, &rx_s);
-		*val_out = (rx[data->frame_size - 3] << 8) | rx[data->frame_size - 2];
+		tx[frame_sz - 1] = ad74x_crc8(tx, frame_sz - 1);
+		ret = spi_transceive_dt(&config->spi, &tx_s, &rx_s);
+		
+		/* Verify CRC of the incoming data frame */
+		if (rx[frame_sz - 1] != ad74x_crc8(rx, frame_sz - 1)) {
+			ret = -EIO;
+		} else {
+			/* Data is located in the middle bytes of the frame */
+			*val_out = (rx[frame_sz - 3] << 8) | rx[frame_sz - 2];
+		}
 	}
 	k_mutex_unlock(&data->bus_lock);
 	return ret;

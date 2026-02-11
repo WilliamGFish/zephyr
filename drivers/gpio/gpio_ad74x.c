@@ -12,17 +12,25 @@ static int gpio_ad74x_config(const struct device *dev, gpio_pin_t pin, gpio_flag
 {
 	const struct device *mfd = dev->parent;
 	const struct ad74x_mfd_api *api = mfd->api;
-	uint8_t setup_reg =
-		AD74X_REG_CH_FUNC_SETUP(api->get_chip_type(mfd) == CHIP_AD74416H ? pin : 0);
+    uint8_t type = api->get_chip_type(mfd);
+	
+	/* Setup register address depends on chip channel count */
+	uint8_t setup_reg = AD74X_REG_CH_FUNC_SETUP(type == CHIP_AD74416H ? pin : 0);
 
 	if (flags & GPIO_OUTPUT) {
-		api->transfer(mfd, setup_reg, 0x0006, NULL, false); // Mode 0x06: DO
+        /* Per Datasheet: To use Digital Output, first set CH_FUNC to 0x06 (DO).
+		 * Then enable sourcing in the DO_CONFIG register.
+		 */
+		api->transfer(mfd, setup_reg, 0x0006, NULL, false);
+
+        /* DO_CONFIG: 0x09 (74115H) / 0x08 (4416H). Set Bit 0 to enable sourcing. */
 		uint8_t do_reg = (api->get_chip_type(mfd) == CHIP_AD74115H)
 					 ? 0x09
 					 : (0x08 + (pin * AD74X_CH_STRIDE));
 		return api->transfer(mfd, do_reg, 0x0001, NULL, false);
 	}
-	return api->transfer(mfd, setup_reg, 0x0005, NULL, false); // Mode 0x05: DI
+    /* Set CH_FUNC to 0x05 (Digital Input Mode) */
+	return api->transfer(mfd, setup_reg, 0x0005, NULL, false);
 }
 
 static int gpio_ad74x_port_set_masked(const struct device *dev, uint32_t mask, uint32_t value)
@@ -36,11 +44,15 @@ static int gpio_ad74x_port_set_masked(const struct device *dev, uint32_t mask, u
 			uint16_t reg_val;
 			uint8_t data_reg =
 				(type == CHIP_AD74115H) ? 0x09 : (0x08 + (i * AD74X_CH_STRIDE));
+
+            /* Read current config, modify Bit 0 (Data bit), and write back.
+			 * Ref: AD74416H Table 58 / AD74115H Table 41.
+			 */
 			api->transfer(mfd, data_reg, 0, &reg_val, true);
 			if (value & BIT(i)) {
 				reg_val |= BIT(0);
 			} else {
-				reg_val &= ~BIT(0); // BIT(0) is Data
+				reg_val &= ~BIT(0);
 			}
 			api->transfer(mfd, data_reg, reg_val, NULL, false);
 		}
