@@ -1,7 +1,9 @@
 # Copyright (c) 2026 William Fish (Manulytica ltd)
 # SPDX-License-Identifier: Apache-2.0
 
-description: Analog Devices AD74x MFD Parent (AD74416H / AD74115H)
+description: |
+    Analog Devices AD74x MFD Parent (AD74416H / AD74115H).
+    Handles SPI communication, CRC-8, NVS persistence, and safety diagnostics.
 compatible: "adi,ad74x-mfd"
 include: [spi-device.yaml]
 properties:
@@ -11,5 +13,18 @@ properties:
     enum: ["ad74416h", "ad74115h"]
   reset-gpios:
     type: phandle-array
+    description: Hardware reset pin (active low).
   adc-rdy-gpios:
     type: phandle-array
+    description: Pin to signal ADC conversion completion (active high).
+  alert-gpios:
+    type: phandle-array
+    description: Pin to signal hardware faults (active low).
+  partition:
+    type: phandle
+    description: Flash partition for NVS calibration storage.
+  wdt-timeout:
+    type: int
+    default: 0
+    enum: [0, 1, 5, 10, 25, 50, 100, 250, 500, 750, 1000, 2000]
+    description: Hardware watchdog timeout in ms. 0 to disable.

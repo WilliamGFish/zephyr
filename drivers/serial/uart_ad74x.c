@@ -26,8 +26,9 @@ static int uart_ad74x_poll_in(const struct device *dev, unsigned char *c)
 	 * AD74115H (Single): RFC=0x69, RX=0x6A (Ref: Table 109)
 	 * AD74416H (Quad):   RFC=0x85, RX=0x81 (Ref: Table 40, Stride 0x10)
 	 */
-	uint8_t rfc_reg = (api->get_chip_type(mfd) == CHIP_AD74115H) ? 0x69 : (0x85 + (ch * 0x10));
-	uint8_t rx_reg = (api->get_chip_type(mfd) == CHIP_AD74115H) ? 0x6A : (0x81 + (ch * 0x10));
+	uint8_t type = api->get_chip_type(mfd);
+	uint8_t rfc_reg = (type == CHIP_AD74115H) ? 0x69 : (0x85 + (ch * 0x10));
+	uint8_t rx_reg = (type == CHIP_AD74115H) ? 0x6A : (0x81 + (ch * 0x10));
 
 	uint16_t count;
 	/* Check Receive FIFO Count (RFC) register bits [5:0] */
@@ -59,8 +60,9 @@ static void uart_ad74x_poll_out(const struct device *dev, unsigned char c)
 	 * AD74115H (Single): MCR=0x6C, TX=0x6B (Ref: Table 112)
 	 * AD74416H (Quad):   MCR=0x84, TX=0x82 (Ref: Table 84/86, Stride 0x10)
 	 */
-	uint8_t mcr_reg = (api->get_chip_type(mfd) == CHIP_AD74115H) ? 0x6C : (0x84 + (ch * 0x10));
-	uint8_t tx_reg = (api->get_chip_type(mfd) == CHIP_AD74115H) ? 0x6B : (0x82 + (ch * 0x10));
+	uint8_t type = api->get_chip_type(mfd);
+	uint8_t mcr_reg = (type == CHIP_AD74115H) ? 0x6C : (0x84 + (ch * 0x10));
+	uint8_t tx_reg = (type == CHIP_AD74115H) ? 0x6B : (0x82 + (ch * 0x10));
 
 	/*
 	 * HART is half-duplex. We must set the RTS (Request to Send) bit
