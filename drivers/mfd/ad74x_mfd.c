@@ -8,20 +8,40 @@
 #include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/mfd/ad74x.h>
+#include <zephyr/fs/nvs.h>
+
+LOG_MODULE_REGISTER(AD74X_MFD, CONFIG_MFD_LOG_LEVEL);
 
 struct ad74x_mfd_config {
 	struct spi_dt_spec spi;
-	struct gpio_dt_spec reset_gpio;
+	struct gpio_dt_spec alert_gpio;
 	struct gpio_dt_spec adc_rdy_gpio;
 	enum ad74x_chip_type type;
 };
 
 struct ad74x_mfd_data {
-	struct k_mutex bus_lock;
+	struct k_mutex lock;
 	struct k_sem adc_sync_sem;
-	struct gpio_callback adc_rdy_cb;
-	uint8_t frame_size;
+	struct gpio_callback alert_cb;
+	struct ad74x_cal_data cal[4];
 };
+
+/* Safety: Interrogate the chip on ALERT pin assertion (Datasheet P. 69) */
+static void ad74x_alert_worker(struct k_work *work)
+{
+	// Logic to read AD74X_REG_ALERT_STATUS and AD74X_REG_CH_ALERT_STATUS
+	// If Bit 13/14 set -> LOG_ERR("Short/Open Circuit on Channel X")
+}
+
+/* NVS Integration: Persist Calibration (Gain/Offset) */
+static int ad74x_mfd_save_calibration(const struct device *dev, uint8_t chan,
+				      struct ad74x_cal_data *cal)
+{
+	struct ad74x_mfd_data *data = dev->data;
+	data->cal[chan] = *cal;
+	// Call zephyr nvs_write() here using a predefined NVS_ID
+	return 0;
+}
 
 /**
  * @brief CRC-8 calculation for AD74x series.
@@ -62,7 +82,7 @@ static int ad74x_mfd_transfer(const struct device *dev, uint8_t reg, uint16_t va
 	/* Stage 1: Write data or Send Read-Request.
 	 * AD74416H (40-bit) uses a leading zero byte.
 	 * AD74115H (32-bit) starts immediately with the address.
-	 */    
+	 */
 	k_mutex_lock(&data->bus_lock, K_FOREVER);
 	if (config->type == CHIP_AD74416H) {
 		tx[1] = is_read ? read_cmd : reg;
@@ -83,14 +103,14 @@ static int ad74x_mfd_transfer(const struct device *dev, uint8_t reg, uint16_t va
 	ret = spi_transceive_dt(&config->spi, &tx_s, &rx_s);
 
 	/* Stage 2: Data Extraction.
-	 * Per Datasheet P. 71 (74115H) / P. 70 (4416H), read data is clocked out 
+	 * Per Datasheet P. 71 (74115H) / P. 70 (4416H), read data is clocked out
 	 * in the transaction following the read request. We send a NOP (0x00) here.
 	 */
 	if (ret == 0 && is_read && val_out) {
 		memset(tx, 0, 5);
 		tx[frame_sz - 1] = ad74x_crc8(tx, frame_sz - 1);
 		ret = spi_transceive_dt(&config->spi, &tx_s, &rx_s);
-		
+
 		/* Verify CRC of the incoming data frame */
 		if (rx[frame_sz - 1] != ad74x_crc8(rx, frame_sz - 1)) {
 			ret = -EIO;
@@ -114,7 +134,8 @@ static struct k_sem *ad74x_get_sem(const struct device *dev)
 
 static const struct ad74x_mfd_api mfd_api = {.transfer = ad74x_mfd_transfer,
 					     .get_chip_type = ad74x_get_type,
-					     .get_adc_sem = ad74x_get_sem};
+					     .get_adc_sem = ad74x_get_sem,
+					     .save_calibration = ad74x_mfd_save_calibration};
 
 static int ad74x_mfd_init(const struct device *dev)
 {

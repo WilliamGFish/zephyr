@@ -8,6 +8,20 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/mfd/ad74x.h>
 
+static int gpio_ad74x_pin_set(const struct device *dev, gpio_pin_t pin, int value) {
+	const struct device *mfd = dev->parent;
+	const struct ad74x_mfd_api *api = mfd->api;
+	
+	/* Extension: Write to DO_DATA in Register 0x08 (4416H) or 0x09 (74115H) */
+	uint8_t type = api->get_chip_type(mfd);
+	uint8_t reg = (type == CHIP_AD74115H) ? 0x09 : (0x08 + (pin * AD74X_CH_STRIDE));
+	
+	uint16_t val;
+	api->transfer(mfd, reg, 0, &val, true);
+	if (value) val |= BIT(0); else val &= ~BIT(0);
+	return api->transfer(mfd, reg, val, NULL, false);
+}
+
 static int gpio_ad74x_config(const struct device *dev, gpio_pin_t pin, gpio_flags_t flags)
 {
 	const struct device *mfd = dev->parent;

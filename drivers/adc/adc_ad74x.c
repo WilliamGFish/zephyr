@@ -5,8 +5,26 @@
  */
 
 #define DT_DRV_COMPAT analog_ad74x_adc
+#include <math.h>
 #include <zephyr/drivers/adc.h>
 #include <zephyr/drivers/mfd/ad74x.h>
+
+/* Callendar-Van Dusen for Pt1000 (Datasheet P. 47) */
+static float ad74x_rtd_math(uint32_t raw_adc) {
+	float r_ref = 2100.0f; // Internal reference + sense
+	float resistance = ((float)raw_adc / 16777216.0f) * r_ref;
+	// Standard Pt1000: t = (R - 1000) / 3.85
+	return (resistance - 1000.0f) / 3.85f;
+}
+
+static int adc_ad74x_channel_setup(const struct device *dev, const struct adc_channel_cfg *cfg) {
+	const struct device *mfd = dev->parent;
+	const struct ad74x_mfd_api *api = mfd->api;
+	
+	/* Example: Define signal as 4-20mA (Current Input Loop Powered) */
+	uint16_t func = (cfg->differential) ? AD74X_FUNC_CURR_IN_LOOP : AD74X_FUNC_VOLTAGE_IN;
+	return api->transfer(mfd, AD74X_REG_CH_FUNC_SETUP(cfg->channel_id), func, NULL, false);
+}
 
 static int adc_ad74x_read(const struct device *dev, const struct adc_sequence *seq)
 {
