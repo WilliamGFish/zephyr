@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 #ifndef ZEPHYR_DRIVERS_MFD_AD74X_H_
 #define ZEPHYR_DRIVERS_MFD_AD74X_H_
 
